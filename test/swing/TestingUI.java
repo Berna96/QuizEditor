@@ -13,13 +13,14 @@ import javax.swing.*;
 import javax.swing.text.AbstractDocument.Content;
 
 import view.CustomQueue;
+import view.ICustomQueue;
 
 public class TestingUI extends JFrame implements ActionListener{
 
 	private static final int WIDTH_W = 700;
 	private static final int HEIGHT_W = 1000;
 	private static final int MAX_LINE_IN_MEMORY = 8;
-	private CustomQueue<String> queue;
+	private ICustomQueue<String> queue;
 	
 	//menu
 	JMenuBar bar;
@@ -147,6 +148,7 @@ public class TestingUI extends JFrame implements ActionListener{
 		}else if (obj == searchRB) {
 			if (insertRB.isSelected()) {
 				queue.enqueue("Premuto search");
+				displayError.setText(""a);
 				displayError.setText(queue.toString());
 				cardLayout.next(contentPanel);
 			}
