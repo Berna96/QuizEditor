@@ -8,8 +8,9 @@ public interface IModel {
 	/**
 	 * 
 	 * @param filename percorso del file
+	 * @throws IOException 
 	 */
-	public void setFile(String filename) throws FileNotFoundException;
+	public void setFile(String filename) throws FileNotFoundException, IOException;
 	/**
 	 * Controlla che il linguaggio del file sia ben formato (vedere ogni singolo formato)
 	 * @return true se ben formato, false altrimenti
@@ -21,8 +22,9 @@ public interface IModel {
 	 * Inserisci il quiz nel file
 	 * @param a quiz da inserire
 	 * @return true se inserisci, false altrimenti
+	 * @throws IOException 
 	 */
-	public boolean insertAnswer(IAnswers a);
+	public boolean insertAnswer(IAnswers a) throws IOException;
 	/**
 	 * 
 	 * @param category Stringa di ricerca della categoria (se vuota ricerca tutto, altrimenti solo la categoria specificata)
@@ -34,6 +36,7 @@ public interface IModel {
 	/**
 	 * Rimuove le righe malformate 
 	 * @return true se rimosse, false altrimenti
+	 * @throws IOException 
 	 */
-	public boolean removeWrongLines();
+	public boolean removeWrongLines() throws IOException;
 }

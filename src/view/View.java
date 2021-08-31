@@ -29,6 +29,8 @@ public class View extends JFrame implements IView, ActionListener{
 	private static final int HEIGHT_W = 400;
 	private IController controller;
 	private String currentFilePath;
+	private CustomQueue<String> quizMessages;
+	private CustomQueue<String> infoErrorMessages;
 	
 	//elementi Swing
 	JMenuBar bar;
@@ -123,7 +125,7 @@ public class View extends JFrame implements IView, ActionListener{
 
 	@Override
 	public String[] getFileNames() {
-		return currentFilePath;
+		return null;
 	}
 
 	@Override
@@ -140,13 +142,16 @@ public class View extends JFrame implements IView, ActionListener{
 	@Override
 	public void displayErrorMessages(String message) {
 		// TODO Add Color
-		displayInfoErrors.setText(message);
+		displayInfoErrors.setText("");
+		infoErrorMessages.enqueue(message);
+		displayInfoErrors.setText(infoErrorMessages.toString());
 	}
 
 	@Override
 	public void displayQuizMessages(String message) {
-		// TODO Auto-generated method stub
-		displayQuiz.setText(message);
+		displayQuiz.setText("");
+		quizMessages.enqueue(message);
+		displayQuiz.setText(quizMessages.toString());
 	}
 
 }

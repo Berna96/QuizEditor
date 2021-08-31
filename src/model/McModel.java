@@ -1,19 +1,25 @@
 package model;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 public class McModel implements IModel{
 
 	private String filename;
 	private File file;
+	private static final String FIRST_KEY = "\"MC\"";
 	private static final String[] MC_KEYS = {"category","question",
 			"A", "B", "C", "D", "correct answer", "caption"};
 	private static final String REGEX = "\",\"";
+	private BufferedReader br;
+	private BufferedWriter bw;
 	
 	/**
 	 * 
@@ -23,33 +29,36 @@ public class McModel implements IModel{
 	public McModel(String filename) throws FileNotFoundException, IOException {
 		this.filename = filename;
 		if (filename == null) {
-			throw new FileNotFoundException("Hai passato un valore nullo come nome del file");
+			throw new IllegalArgumentException("Hai passato un valore nullo come nome del file");
 		}
 		file = new File(filename);
 		if (!file.exists()) {
 			throw new FileNotFoundException("Il file " + filename + "non esiste");
 		}
-		BufferedReader br = new BufferedReader(new FileReader(file));
-		String first_line = br.readLine();
-		String[] keys = first_line.split(REGEX);
-		if (!keys.equals(MC_KEYS)) {
+		br = new BufferedReader(new FileReader(file));
+		//write
+		FileOutputStream fos = new FileOutputStream(file);
+		bw = new BufferedWriter(new OutputStreamWriter(fos));
+		//check first line
+		boolean hasKey = hasKeyWords();
+		if (hasKey) {
 			throw new FileNotFoundException("Il file non ha il formato corretto");
 		}
 	}
 	
-	private boolean hasKeyWords(BufferedReader br) throws IOException {
+	private boolean hasKeyWords() throws IOException {
 		br.reset();
-		String first_key = br.readLine();
-		String[] keys = first_key.split(REGEX);
-		return keys.equals(MC_KEYS);
+		String first_line = br.readLine();
+		String second_line = br.readLine();
+		String[] keys = second_line.split(REGEX);
+		return first_line.equals(FIRST_KEY) && keys.equals(MC_KEYS);
 	}
 	
 	@Override
 	public boolean isWellFormed() throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(file));
 		String line;
 	    //check key words
-		if (!hasKeyWords(br)) {
+		if (!hasKeyWords()) {
 			return false;
 		}
 	    //check new line
@@ -63,26 +72,29 @@ public class McModel implements IModel{
 	}
 
 	@Override
-	public boolean insertAnswer(IAnswers a) {
+	public boolean insertAnswer(IAnswers a) throws IOException {
 		if (a instanceof AnswerMC) {
 			return false;
 		}
-		AnswerMC answer = (AnswerMC) a;
-		//scrivi nel file
-		return false;
+		AnswerMC ans = (AnswerMC) a;
+		String ansStr = "\"TODO/CATEGORY\"" + "\",\"" + ans.getQuestion() + "\",\"" + ans.getA() +
+				"\",\"" + ans.getB() + ans.getC() + ans.getD() + ans.getCorrectAnswer()
+				+ ans.getCaption();
+		bw.write(ansStr);
+		bw.newLine();
+		return true;
 	}
 
 	@Override
 	public IAnswers[] readAnswers(String category_search) throws FileNotFoundException, IOException {
 		if (category_search == null) {
-			return null;
+			throw new IllegalArgumentException("la stringa di ricerca è null");
 		}
 		int num_answers = (int) (file.length() - 1);
 		if (num_answers <= 0 || !file.exists()) {
 			return null; 
 		}
 		ArrayList<AnswerMC> answer_list = new ArrayList<AnswerMC>();
-		BufferedReader br = new BufferedReader(new FileReader(file));
 		String line;
 	    //skip first line
 	    br.readLine();
@@ -115,19 +127,41 @@ public class McModel implements IModel{
 	}
 
 	@Override
-	public boolean removeWrongLines() {
-		BufferedReader br = new BufferedReader(new FileReader(file))
+	public boolean removeWrongLines() throws IOException {
+		br.reset();
 		String line;
-	    //skip first line
+	    //skip first and second line
+	    br.readLine();
 	    br.readLine();
 	    //search new line
 	    while ((line = br.readLine()) != null) {
-	       String[] words = line.split("\"");
+	       String[] words = line.split(REGEX);
 	       if (words.length != MC_KEYS.length) {
 	    	   //Rimuovi
+	    	   //leggi tutte le righe
+	    	   bw.write(line);
+	    	   bw.newLine();
 	       }
 	    }
 		return false;
+	}
+
+	@Override
+	public void setFile(String filename) throws FileNotFoundException, IOException {
+		if (filename == null) {
+			throw new IllegalArgumentException("La stringa del file è null");
+		}
+		file = new File(filename);
+		br.close();
+		br = new BufferedReader(new FileReader(file));
+		//write
+		FileOutputStream fos = new FileOutputStream(file);
+		bw = new BufferedWriter(new OutputStreamWriter(fos));
+	}
+	
+	public void closeFile() throws IOException {
+		br.close();
+		bw.close();
 	}
 
 }

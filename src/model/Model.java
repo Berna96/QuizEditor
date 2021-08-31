@@ -3,7 +3,13 @@ package model;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public class TfModel implements IModel {
+public abstract class Model implements IModel {
+
+	@Override
+	public void setFile(String filename) throws FileNotFoundException, IOException {
+		// TODO Auto-generated method stub
+
+	}
 
 	@Override
 	public boolean isWellFormed() throws FileNotFoundException, IOException {
@@ -24,15 +30,9 @@ public class TfModel implements IModel {
 	}
 
 	@Override
-	public boolean removeWrongLines() {
+	public boolean removeWrongLines() throws IOException {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	@Override
-	public void setFile(String filename) throws FileNotFoundException {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

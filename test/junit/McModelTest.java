@@ -1,33 +1,35 @@
 package junit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnit44Runner;
 
-import junit.framework.Assert;
-import model.McModel;
+import view.CustomQueue;
 
+@RunWith(MockitoJUnit44Runner.class)
 public class McModelTest {
 	
-	private McModel model;
-	private String filename;
+	@Mock
+	private CustomQueue<String> cq;
 	
-	public McModelTest() {
-		filename = "C:";
-		model = new McModel(filename);
-	}
-
-	//get exception
-	@Test
-	public void test() {
-		McModel wrongmodel = new McModel("");
+	@Before
+	public void init() {
 	}
 	
 	@Test
 	public void test01() {
-		assertEquals(0, 0);
+		cq.enqueue("");
+		Mockito.verify(cq).enqueue("");
+		assertEquals(0, cq.size());
+		
+		Mockito.when(cq.size()).thenReturn(1000);
+		assertEquals(1000, cq.size());
 	}
 
 }

@@ -3,8 +3,10 @@ package model;
 public class AnswerTF implements ITFAnswers {
 
 	private boolean correctAnswer;
-	private String question, caption;
+	private String question, caption;	
 	
+	//@ requires question != null && !question.isEmpty();
+	//@ requires caption != null && !question.isEmpty();
 	public AnswerTF(String question, boolean correctAnswer, String caption) {
 		this.caption = question;
 		this.caption = caption;

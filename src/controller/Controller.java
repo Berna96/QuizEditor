@@ -24,12 +24,12 @@ public class Controller implements IController{
 	private TfModel model_tf;
 	private IView view;
 
-	private static final String ERROR_MESSAGE = "Problemi nella lettura/scrittura del file\n";
+	private static final String GENERAL_ERROR_MESSAGE = "Problemi nella lettura/scrittura del file\n";
 	
 	public Controller(McModel model_mc, TfModel model_tf, IView view) throws Exception {
 		if (model_mc == null || model_tf == null || view == null) {
 			//sostituire l'eccezione con una custom
-			throw new Exception("Non hai inizializzato o i modelli o la view");
+			throw new IllegalArgumentException("Non hai inizializzato o i modelli o la view");
 		}
 		assert model_mc != null;
 		assert model_tf != null;
@@ -60,9 +60,18 @@ public class Controller implements IController{
 			checkCorrectFormat();
 			//inseriamo le domande
 			if (answers.length == 7) {
-				AnswerMC a = new AnswerMC(null, 
-						null, null, null, null, 
-						null, null);
+				String category = answers[0];
+				String question = answers[1];
+				String ansA = answers[2];
+				String ansB = answers[3];
+				String ansC = answers[4];
+				String ansD = answers[5];
+				String ansCorr = answers[6];
+				String caption = answers[7];
+				
+				AnswerMC a = new AnswerMC(question, 
+						ansA, ansB, ansC, ansD, 
+						ansCorr, caption);
 				model_mc.insertAnswer(a);
 			}else if (answers.length == 3) {
 				AnswerTF a = new AnswerTF(answers[0], true, answers[2]);
@@ -73,7 +82,7 @@ public class Controller implements IController{
 			}
 			
 		}catch (Exception e) {
-			view.displayInfoMessagesForInsert("Problemi nella lettura/scrittura del file\n");
+			view.displayGeneralInfoMessages("Problemi nella lettura/scrittura del file\n");
 		}
 	}
 
@@ -101,9 +110,9 @@ public class Controller implements IController{
 		    view.displayQuizMessages(message);
 		    
 		}catch (FileNotFoundException e) {
-			view.displayErrorMessages(ERROR_MESSAGE);
+			view.displayErrorMessages(GENERAL_ERROR_MESSAGE);
 		}catch (IOException e) {
-			view.displayErrorMessages(ERROR_MESSAGE);
+			view.displayErrorMessages(GENERAL_ERROR_MESSAGE);
 		}
 		
 	}
@@ -115,9 +124,11 @@ public class Controller implements IController{
 		try {
 			model_mc.setFile(filenames[0]);
 			model_tf.setFile(filenames[1]);
-			view.displayGeneralInfoMessages("è stato cambiato il file con successo ora il file è" + filename);
+			view.displayGeneralInfoMessages("è stato cambiato il file con successo ora il file è " + filenames[0]);
 		} catch (FileNotFoundException e) {
 			view.displayErrorMessages("Stoca");
+		} catch (IOException e) {
+			view.displayGeneralInfoMessages(GENERAL_ERROR_MESSAGE);
 		}
 	}
 
