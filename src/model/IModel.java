@@ -6,10 +6,25 @@ import java.io.IOException;
 public interface IModel {
 	
 	/**
-	 * 
+	 * Setta il file corrente
 	 * @param filename percorso del file
+	 * @throws FileNotFoundException se non trova il file 
 	 */
 	public void setFile(String filename) throws FileNotFoundException;
+	/**
+	 * Controlla che il file ha le parole chiave
+	 * @return true se ha tutte le parole chiave, false altrimenti
+	 * @throws FileNotFoundException se non trova il file
+	 * @throws IOException per problemi di I/O
+	 */
+	public boolean hasKeyWords() throws FileNotFoundException, IOException;
+	/**
+	 * Controlla se nel file sono inserite le righe corrette
+	 * @return true se ha qualche linea errata, false altrimenti
+	 * @throws FileNotFoundException se non trova il file
+	 * @throws IOException problemi I/O
+	 */
+	public boolean hasWrongLines() throws FileNotFoundException, IOException;
 	/**
 	 * Controlla che il linguaggio del file sia ben formato (vedere ogni singolo formato)
 	 * @return true se ben formato, false altrimenti
@@ -21,8 +36,9 @@ public interface IModel {
 	 * Inserisci il quiz nel file
 	 * @param a quiz da inserire
 	 * @return true se inserisci, false altrimenti
+	 * @throws IOException 
 	 */
-	public boolean insertAnswer(IAnswers a);
+	public boolean insertAnswer(IAnswers a) throws IOException;
 	/**
 	 * 
 	 * @param category Stringa di ricerca della categoria (se vuota ricerca tutto, altrimenti solo la categoria specificata)
@@ -32,8 +48,9 @@ public interface IModel {
 	 */
 	public IAnswers[] readAnswers(String category) throws FileNotFoundException, IOException;
 	/**
-	 * Rimuove le righe malformate 
+	 * Rimuove le righe che non seguono il formato 
 	 * @return true se rimosse, false altrimenti
+	 * @throws IOException 
 	 */
-	public boolean removeWrongLines();
+	public boolean removeWrongLines() throws FileNotFoundException, IOException;
 }

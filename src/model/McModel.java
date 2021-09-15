@@ -1,97 +1,51 @@
 package model;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
-public class McModel implements IModel{
+public class McModel extends Model{
 
-	private String filename;
-	private File file;
+	private static final String FIRST_KEY = "\"MC\"";
 	private static final String[] MC_KEYS = {"category","question",
-			"A", "B", "C", "D", "correct answer", "caption"};
-	private static final String REGEX = "\",\"";
+			"A", "B", "C", "D", "answer", "caption"};
 	
-	/**
-	 * 
-	 * @param filename nome del file
-	 * @throws IOException 
-	 */
-	public McModel(String filename) throws FileNotFoundException, IOException {
-		this.filename = filename;
-		if (filename == null) {
-			throw new FileNotFoundException("Hai passato un valore nullo come nome del file");
-		}
-		file = new File(filename);
-		if (!file.exists()) {
-			throw new FileNotFoundException("Il file " + filename + "non esiste");
-		}
-		BufferedReader br = new BufferedReader(new FileReader(file));
-		String first_line = br.readLine();
-		String[] keys = first_line.split(REGEX);
-		if (!keys.equals(MC_KEYS)) {
-			throw new FileNotFoundException("Il file non ha il formato corretto");
-		}
-	}
-	
-	private boolean hasKeyWords(BufferedReader br) throws IOException {
-		br.reset();
-		String first_key = br.readLine();
-		String[] keys = first_key.split(REGEX);
-		return keys.equals(MC_KEYS);
-	}
-	
-	@Override
-	public boolean isWellFormed() throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(file));
-		String line;
-	    //check key words
-		if (!hasKeyWords(br)) {
-			return false;
-		}
-	    //check new line
-	    while ((line = br.readLine()) != null) {
-	       String[] words = line.split(REGEX);
-	       if (words.length != MC_KEYS.length) {
-	    	   return false;
-	       }
-	    }
-	    return true;
-	}
-
-	@Override
-	public boolean insertAnswer(IAnswers a) {
-		if (a instanceof AnswerMC) {
-			return false;
-		}
-		AnswerMC answer = (AnswerMC) a;
-		//scrivi nel file
-		return false;
+	public McModel(String filename) throws FileNotFoundException{
+		super(filename, FIRST_KEY, MC_KEYS);
 	}
 
 	@Override
 	public IAnswers[] readAnswers(String category_search) throws FileNotFoundException, IOException {
+		File file = new File(filename);
 		if (category_search == null) {
-			return null;
+			throw new IllegalArgumentException("la stringa di ricerca è null");
 		}
-		int num_answers = (int) (file.length() - 1);
-		if (num_answers <= 0 || !file.exists()) {
-			return null; 
-		}
-		ArrayList<AnswerMC> answer_list = new ArrayList<AnswerMC>();
-		BufferedReader br = new BufferedReader(new FileReader(file));
+//		int num_answers = (int) (file.length() - 1);
+//		//se è vuoto
+//		if (num_answers <= 0) {
+//			return null; 
+//		}
+		ArrayList<IAnswers> answer_list = new ArrayList<IAnswers>();
 		String line;
-	    //skip first line
+		BufferedReader br = new BufferedReader(new FileReader(new File(filename)));
+	    //skip first lines
+	    br.readLine();
 	    br.readLine();
 	    //search new line
 	    while ((line = br.readLine()) != null) {
-	       String[] words = line.split("\"");
-	       String category = words[0];
-	       if (category_search!=null && category_search.isEmpty() 
-	    		   && category_search.equals(category)) {
+	       String[] words = splitLine(line);
+	       String category_in_file = words[0];
+	       if (category_search.isEmpty() 
+	    		   || category_search.equals(category_in_file)) {
 	    	   //Questions
 	    	   String question = words[1];
 	    	   String A = words[2];
@@ -101,33 +55,59 @@ public class McModel implements IModel{
 	    	   String correctAnswer = words[6];
 	    	   String caption = words[7];
 	    	   
-	    	   AnswerMC a = new AnswerMC(question, A, B, C, D, correctAnswer, caption);
+	    	   AnswerMC a = new AnswerMC(category_in_file, question, A, B, C, D, correctAnswer, caption);
 	    	   answer_list.add(a);
 	       }
 	    }
 
-		if (answer_list==null || answer_list.isEmpty()) {
+		if (answer_list.isEmpty()) {
+			//vuoto o non trova la stringa di ricerca
 			return null;
 		}else {
-			return (IAnswers[]) answer_list.toArray();
+			Object[] obj_list = answer_list.toArray();
+			IAnswers[] answ_list = new IAnswers[obj_list.length];
+			for (int i=0; i < obj_list.length; i++) {
+				answ_list[i] = (IAnswers) obj_list[i];
+			}
+			assert answ_list != null;
+			return answ_list;
 		}
 		
 	}
 
 	@Override
-	public boolean removeWrongLines() {
-		BufferedReader br = new BufferedReader(new FileReader(file))
-		String line;
-	    //skip first line
-	    br.readLine();
-	    //search new line
-	    while ((line = br.readLine()) != null) {
-	       String[] words = line.split("\"");
-	       if (words.length != MC_KEYS.length) {
-	    	   //Rimuovi
-	       }
-	    }
-		return false;
-	}
+	public boolean removeWrongLines() throws FileNotFoundException, IOException {
+		File inputFile = new File(filename);
+		File tempFile = new File("myTempFile.txt");
 
+		BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+		
+		//riporta le prime due
+		writer.write(reader.readLine() + System.lineSeparator()); 
+		writer.write(reader.readLine() + System.lineSeparator()); 
+		
+		boolean removed = false;
+		String currentLine;
+		while((currentLine = reader.readLine()) != null) {
+		    String[] splittedLine = splitLine(currentLine);
+		    boolean ok_line = splittedLine.length == MC_KEYS.length && (splittedLine[6].equals("A") || splittedLine[6].equals("B") ||
+		    		splittedLine[6].equals("C") || splittedLine[6].equals("D"));
+		    if(!ok_line) {
+		    	removed = true;
+		    	continue;
+		    }
+		    assert ok_line;
+		    System.out.println(currentLine);
+		    writer.write(currentLine + System.lineSeparator());
+		    writer.flush();
+		}
+		writer.close(); 
+		reader.close();
+		//problema
+		if (!inputFile.delete())		throw new IOException("Non riesco a cancellare il file");
+		if (!tempFile.renameTo(inputFile))	throw new IOException("Non riesco a rinominare");
+		return removed;
+	}
+		
 }
